@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Share Your Screen</title>
+<style>
+  :root{
+    --bg:#0f1729; --bg2:#16213d; --card:#1d2b4d; --line:#2e4370;
+    --ink:#f3f7ff; --muted:#a8bbdd;
+    --zoom:#2d8cff; --green:#21a366; --red:#e0483e; --gold:#ffc53d;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1100px 600px at 50% -10%,#213561 0%,var(--bg) 60%);
+    color:var(--ink); min-height:100vh;
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:28px 16px 64px}
+
+  /* ---------- header ---------- */
+  header{text-align:center;margin-bottom:22px}
+  .kicker{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  h1{font-size:clamp(30px,7vw,52px);line-height:1.05;margin:8px 0 6px;font-weight:800}
+  h1 .hl{color:var(--gold)}
+  .sub{color:var(--muted);font-size:clamp(15px,2.6vw,18px);margin:0}
+
+  /* ---------- chooser ---------- */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .q{font-size:clamp(19px,3.4vw,25px);font-weight:800;margin:0 0 4px;text-align:center}
+  .qsub{color:var(--muted);text-align:center;margin:0 0 20px;font-size:15px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.choices{grid-template-columns:1fr}}
+  .choice{
+    background:var(--bg2);border:2px solid var(--line);border-radius:14px;padding:16px;
+    cursor:pointer;text-align:left;color:var(--ink);font:inherit;transition:.15s;
+  }
+  .choice:hover,.choice:focus-visible{border-color:var(--zoom);transform:translateY(-2px);outline:none}
+  .choice h3{margin:10px 0 6px;font-size:18px}
+  .choice p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  .tellbar{height:56px;border-radius:9px;border:1px solid var(--line);background:#0c1226;padding:8px;display:flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#3a4a6b}
+  .dots span{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+  .urlbox{flex:1;height:22px;border-radius:11px;background:#223055;display:flex;align-items:center;padding:0 10px;font-size:11px;color:#8fa8d6;font-family:ui-monospace,Menlo,monospace}
+  .nourl{flex:1;text-align:center;font-size:12px;color:#6d82ab;font-weight:700;letter-spacing:.05em}
+  .notsure{margin-top:16px;text-align:center;font-size:14px;color:var(--muted)}
+  .notsure b{color:var(--ink)}
+
+  /* ---------- player ---------- */
+  #player[hidden]{display:none}
+  .pathtag{display:inline-flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:14px;cursor:pointer}
+  .pathtag:hover{border-color:var(--zoom);color:var(--ink)}
+
+  .stage{position:relative;background:#0a1020;border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;aspect-ratio:16/10}
+  @media(max-width:620px){.stage{aspect-ratio:4/3}}
+
+  /* fake zoom window */
+  .zoomwin{position:absolute;inset:0;display:flex;flex-direction:column;background:#1b1b1f}
+  .chrome{height:34px;background:#2a2d34;display:flex;align-items:center;gap:7px;padding:0 10px;flex:0 0 auto}
+  .chrome .dots span:nth-child(1){background:#ff5f57}
+  .chrome .dots span:nth-child(2){background:#febc2e}
+  .chrome .dots span:nth-child(3){background:#28c840}
+  .chrome .addr{flex:1;height:20px;border-radius:10px;background:#1b1e24;color:#94a3c4;font-size:10px;
+    display:flex;align-items:center;padding:0 10px;font-family:ui-monospace,Menlo,monospace}
+  .chrome .apptag{flex:1;text-align:center;color:#7c869c;font-size:11px;font-weight:700;letter-spacing:.08em}
+  .gallery{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;background:#141418}
+  .tile{border-radius:9px;background:linear-gradient(160deg,#2f3545,#232838);display:flex;align-items:flex-end;
+    padding:8px;font-size:11px;color:#c9d6f0;font-weight:700;position:relative;overflow:hidden}
+  .tile.you{background:linear-gradient(160deg,#3a2f55,#2a2340);outline:2px solid #6d5bd0}
+  .face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px}
+  .toolbar{height:50px;background:#1b1b1f;border-top:1px solid #2a2d34;display:flex;align-items:center;
+    justify-content:center;gap:10px;flex:0 0 auto;transition:opacity .45s, transform .45s}
+  .toolbar.hidden{opacity:0;transform:translateY(12px)}
+  .tbtn{display:flex;flex-direction:column;align-items:center;gap:3px;color:#c9d2e4;font-size:9px;font-weight:600;
+    padding:4px 8px;border-radius:7px}
+  .tbtn i{font-size:15px;font-style:normal;line-height:1}
+  .tbtn.share{background:var(--green);color:#fff;padding:7px 14px;border-radius:9px;font-size:11px;position:relative}
+  .tbtn.share.pulse::after{content:"";position:absolute;inset:-5px;border-radius:13px;border:3px solid var(--green);
+    animation:ring 1.3s infinite}
+  @keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.28)}}
+
+  /* picker overlay */
+  .overlay{position:absolute;inset:0;background:rgba(6,10,20,.72);display:flex;align-items:center;justify-content:center;
+    padding:5%;opacity:0;pointer-events:none;transition:opacity .35s}
+  .overlay.on{opacity:1}
+  .picker{background:#23262e;border-radius:12px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .picker header{background:#2c3039;padding:9px 14px;font-size:12px;font-weight:700;color:#e6ecf8;text-align:left;margin:0}
+  .picker .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:14px}
+  .pick{aspect-ratio:4/3;border-radius:7px;
+    background:linear-gradient(150deg,#3c4252,#2b3040);border:2px solid transparent;
+    display:flex;align-items:flex-end;justify-content:center;padding:5px;font-size:9px;color:#b9c6e0;font-weight:700}
+  .pick.sel{border-color:var(--zoom);background:linear-gradient(150deg,#2b4a7e,#22345c)}
+  .picker footer{display:flex;justify-content:flex-end;gap:8px;padding:0 14px 14px}
+  .btn-blue{background:var(--zoom);color:#fff;border:0;border-radius:7px;padding:7px 20px;font-size:12px;font-weight:700;position:relative}
+  .btn-blue.pulse::after{content:"";position:absolute;inset:-5px;border-radius:11px;border:3px solid var(--zoom);animation:ring 1.3s infinite}
+  .btn-ghost{background:transparent;color:#9fb0cf;border:1px solid #3c4252;border-radius:7px;padding:7px 16px;font-size:12px}
+
+  /* browser chooser dialog */
+  .cdialog{background:#f4f6fa;color:#1a1f2b;border-radius:11px;width:100%;max-width:460px;overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .cdialog h4{margin:0;padding:13px 16px 9px;font-size:13px}
+  .ctabs{display:flex;gap:4px;padding:0 16px;border-bottom:1px solid #d7dde8}
+  .ctab{font-size:11px;padding:7px 10px;color:#5b6678;font-weight:600;border-bottom:2px solid transparent}
+  .ctab.on{color:#1a73e8;border-bottom-color:#1a73e8}
+  .cbody{padding:14px 16px}
+  .cthumb{aspect-ratio:16/10;border-radius:7px;background:linear-gradient(150deg,#dfe6f2,#c8d3e6);
+    border:2px solid #1a73e8;display:flex;align-items:center;justify-content:center;font-size:11px;color:#41506b;font-weight:700}
+  .cdialog footer{display:flex;justify-content:flex-end;gap:8px;padding:0 16px 14px}
+  .cbtn{border:0;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:700;background:#1a73e8;color:#fff;position:relative}
+  .cbtn.pulse::after{content:"";position:absolute;inset:-5px;border-radius:10px;border:3px solid #1a73e8;animation:ring 1.3s infinite}
+  .cbtn.ghost{background:transparent;color:#5b6678}
+
+  /* sharing state */
+  .sharingframe{position:absolute;inset:0;border:5px solid var(--green);border-radius:var(--radius);
+    opacity:0;transition:opacity .35s;pointer-events:none}
+  .sharingframe.on{opacity:1}
+  .stopbar{position:absolute;top:0;left:50%;transform:translate(-50%,-110%);background:#1b1b1f;border:1px solid #2a2d34;
+    border-top:0;border-radius:0 0 10px 10px;padding:6px 12px;display:flex;align-items:center;gap:9px;
+    font-size:10px;color:#c9d2e4;transition:transform .35s;z-index:5}
+  .stopbar.on{transform:translate(-50%,0)}
+  .stopbtn{background:var(--red);color:#fff;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700}
+
+  /* cursor */
+  .cursor{position:absolute;width:26px;height:26px;left:0;top:0;z-index:20;pointer-events:none;
+    transition:transform .85s cubic-bezier(.4,.1,.2,1);filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+  .cursor.click svg{animation:tap .4s}
+  @keyframes tap{50%{transform:scale(.72)}}
+
+  /* ---------- caption + controls ---------- */
+  .caption{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+  .stepno{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--zoom)}
+  .caption h2{margin:6px 0 8px;font-size:clamp(20px,3.6vw,27px);line-height:1.2}
+  .caption p{margin:0;color:var(--muted);font-size:clamp(15px,2.4vw,17px);line-height:1.6}
+  .caption p b{color:var(--ink)}
+
+  .bar{height:5px;background:#16213d;border-radius:99px;overflow:hidden;margin-top:16px}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--zoom),var(--gold))}
+  .controls{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .cbtns{display:flex;gap:8px}
+  button.ctl{background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+    padding:10px 16px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+  button.ctl:hover{border-color:var(--zoom)}
+  button.ctl:disabled{opacity:.35;cursor:default}
+  button.ctl.primary{background:var(--zoom);border-color:var(--zoom)}
+  .pips{display:flex;gap:6px}
+  .pip{width:9px;height:9px;border-radius:50%;background:#2e4370;cursor:pointer;border:0;padding:0}
+  .pip.on{background:var(--gold);transform:scale(1.25)}
+
+  /* ---------- finish ---------- */
+  .finish{margin-top:18px;background:linear-gradient(150deg,#1f3a2e,#16213d);border:1px solid #2c5c46;
+    border-radius:var(--radius);padding:22px}
+  .finish h3{margin:0 0 10px;font-size:21px}
+  .finish ul{margin:0;padding-left:20px;color:var(--muted);line-height:1.8;font-size:16px}
+  .finish ul b{color:var(--ink)}
+  .stuck{margin-top:16px;background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:16px 18px;
+    color:var(--muted);font-size:15px;line-height:1.6}
+  .stuck b{color:var(--gold)}
+  footer.foot{text-align:center;color:#6d82ab;font-size:12px;margin-top:26px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Alpha · 1:1 Coaching</div>
+    <h1>How to <span class="hl">Share Your Screen</span></h1>
+    <p class="sub">Two minutes, six steps, and then you can show me anything.</p>
+  </header>
+
+  <!-- ============ CHOOSER ============ -->
+  <section class="panel" id="chooser">
+    <p class="q">First — which Zoom are you in?</p>
+    <p class="qsub">This is the part that got us last time. They look almost the same, but the buttons live in different places.</p>
+    <div class="choices">
+      <button class="choice" data-path="app">
+        <div class="tellbar">
+          <span class="dots"><span style="background:#ff5f57"></span><span style="background:#febc2e"></span><span style="background:#28c840"></span></span>
+          <span class="nourl">NO WEB ADDRESS UP HERE</span>
+        </div>
+        <h3>🖥️ The Zoom app</h3>
+        <p>A program that opened on its own. There's <b>no web address</b> across the top — just the meeting.</p>
+      </button>
+      <button class="choice" data-path="web">
+        <div class="tellbar">
+          <span class="dots"><span style="background:#ff5f57"></span><span style="background:#febc2e"></span><span style="background:#28c840"></span></span>
+          <span class="urlbox">zoom.us/wc/join/84172462948</span>
+        </div>
+        <h3>🌐 Zoom in a web browser</h3>
+        <p>You can see a <b>web address</b> at the top, like the one above. You're in Chrome, Edge or Safari.</p>
+      </button>
+    </div>
+    <p class="notsure">Not sure? Look at the very top of the window. <b>If you can read a web address, pick the browser.</b></p>
+  </section>
+
+  <!-- ============ PLAYER ============ -->
+  <section id="player" hidden>
+    <button class="pathtag" id="switchPath">← <span id="pathName"></span> · tap to switch</button>
+
+    <div class="stage" id="stage">
+      <div class="zoomwin">
+        <div class="chrome">
+          <span class="dots"><span></span><span></span><span></span></span>
+          <span id="chromeSlot"></span>
+        </div>
+        <div class="gallery">
+          <div class="tile you"><div class="face">🥔</div><span>#COOL#POTATO.</span></div>
+          <div class="tile"><div class="face">🧢</div><span>Coach Eric</span></div>
+        </div>
+        <div class="toolbar" id="toolbar">
+          <div class="tbtn"><i>🎤</i>Mute</div>
+          <div class="tbtn"><i>🎥</i>Video</div>
+          <div class="tbtn share" id="shareBtn"><i>⬆️</i>Share Screen</div>
+          <div class="tbtn"><i>💬</i>Chat</div>
+          <div class="tbtn"><i>😀</i>React</div>
+        </div>
+      </div>
+
+      <!-- zoom app picker -->
+      <div class="overlay" id="ovPicker">
+        <div class="picker">
+          <header>Select a window or an application that you want to share</header>
+          <div class="grid">
+            <div class="pick sel" id="pickScreen">Screen</div>
+            <div class="pick">Whiteboard</div>
+            <div class="pick">TimeBack</div>
+          </div>
+          <footer>
+            <button class="btn-ghost">Cancel</button>
+            <button class="btn-blue" id="pickShare">Share</button>
+          </footer>
+        </div>
+      </div>
+
+      <!-- browser dialog -->
+      <div class="overlay" id="ovBrowser">
+        <div class="cdialog">
+          <h4>zoom.us wants to share the contents of your screen</h4>
+          <div class="ctabs">
+            <div class="ctab">Chrome Tab</div>
+            <div class="ctab">Window</div>
+            <div class="ctab on" id="tabEntire">Entire Screen</div>
+          </div>
+          <div class="cbody"><div class="cthumb" id="cthumb">Your whole screen</div></div>
+          <footer>
+            <button class="cbtn ghost">Cancel</button>
+            <button class="cbtn" id="cShare">Share</button>
+          </footer>
+        </div>
+      </div>
+
+      <div class="stopbar" id="stopbar">You are sharing your screen <span class="stopbtn">Stop Share</span></div>
+      <div class="sharingframe" id="frame"></div>
+
+      <div class="cursor" id="cursor">
+        <svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 2l14 9-6 1 3.5 7-2.6 1.2L9.4 13 4 17z" fill="#fff" stroke="#111" stroke-width="1.1" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="stepno" id="stepno">Step 1</div>
+      <h2 id="title"></h2>
+      <p id="body"></p>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="controls">
+        <div class="cbtns">
+          <button class="ctl" id="prev">← Back</button>
+          <button class="ctl primary" id="play">⏸ Pause</button>
+          <button class="ctl" id="next">Next →</button>
+        </div>
+        <div class="pips" id="pips"></div>
+      </div>
+    </div>
+
+    <div class="finish" id="finish" hidden>
+      <h3>🥔 That's it. You can share your screen.</h3>
+      <ul>
+        <li>Wiggle the mouse so the <b>buttons come back</b></li>
+        <li>Click the <b>green Share Screen</b> button</li>
+        <li>Pick your screen, then click <b>Share</b></li>
+        <li>Green border = it's working. <b>Stop Share</b> when you're done.</li>
+      </ul>
+    </div>
+
+    <div class="stuck">
+      <b>If it still won't work, that's not on you.</b> Some school laptops block it until someone flips a setting. Tell me on our next call and we'll fix it together — don't spend your whole morning fighting it.
+    </div>
+  </section>
+
+  <footer class="foot">
+    These are simplified drawings of Zoom — yours may look slightly different, but the buttons are in the same places.<br>
+    Made for Luke I-B by Coach Eric · Alpha 1:1 Coaching
+  </footer>
+</div>
+
+<script>
+(function(){
+  var STEPS = {
+    app: [
+      { t:"You're in the Zoom app",
+        b:"Good — this is the easier one. Look at the top: <b>no web address</b>. Everything you need is along the bottom edge.",
+        st:{}, cur:null },
+      { t:"Wiggle your mouse first",
+        b:"The buttons <b>hide by themselves</b> after a few seconds. They're not gone. Move the mouse and the black bar slides back up.",
+        st:{toolbar:"hidden"}, cur:null, then:{toolbar:"show"} },
+      { t:"Click the green button",
+        b:"Middle of the bottom bar, the only green one: <b>Share Screen</b>. If you can't see it, wiggle the mouse again.",
+        st:{}, cur:"#shareBtn", click:true },
+      { t:"Zoom asks what to show",
+        b:"A box opens with little pictures of everything you have open. Click the first one — <b>Screen</b>. It turns blue when it's picked.",
+        st:{picker:true}, cur:"#pickScreen", click:true },
+      { t:"Now click Share",
+        b:"Bottom right of that box, the blue <b>Share</b> button. Picking the screen isn't enough — you have to click Share too. <b>This is the step everyone forgets.</b>",
+        st:{picker:true}, cur:"#pickShare", click:true },
+      { t:"You're sharing! 🎉",
+        b:"A <b>green border</b> goes round your screen and a little bar appears at the top. When you're finished, click the red <b>Stop Share</b>.",
+        st:{sharing:true}, cur:null }
+    ],
+    web: [
+      { t:"You're in a web browser",
+        b:"You can see a <b>web address</b> at the top. This one works a bit differently — <b>your browser</b> does the asking, not Zoom.",
+        st:{}, cur:null },
+      { t:"Wiggle your mouse first",
+        b:"The buttons <b>hide by themselves</b> after a few seconds. They're not gone. Move the mouse and the black bar slides back up.",
+        st:{toolbar:"hidden"}, cur:null, then:{toolbar:"show"} },
+      { t:"Click the green button",
+        b:"Same place as always: middle of the bottom bar, the green <b>Share Screen</b>.",
+        st:{}, cur:"#shareBtn", click:true },
+      { t:"Your browser pops up its own box",
+        b:"This one looks different — white, not dark. That's normal. Along the top pick <b>Entire Screen</b>.",
+        st:{browser:true}, cur:"#tabEntire", click:true },
+      { t:"Click the picture, then Share",
+        b:"Click the picture of your screen so it gets a blue outline, then the blue <b>Share</b> button. <b>Both clicks, or nothing happens.</b>",
+        st:{browser:true}, cur:"#cShare", click:true },
+      { t:"You're sharing! 🎉",
+        b:"A bar appears telling you you're sharing. When you're finished, click <b>Stop sharing</b>.",
+        st:{sharing:true}, cur:null }
+    ]
+  };
+
+  var DUR = 6200;
+  var path=null, i=0, playing=true, t0=0, raf=null, timer=null;
+
+  var $=function(s){return document.querySelector(s)};
+  var stage=$("#stage"), cursor=$("#cursor"), toolbar=$("#toolbar");
+
+  function setChrome(){
+    $("#chromeSlot").outerHTML = path==="web"
+      ? '<span class="addr" id="chromeSlot">zoom.us/wc/84172462948</span>'
+      : '<span class="apptag" id="chromeSlot">ZOOM · 1:1 WEEKLY COACHING</span>';
+  }
+
+  function applyScene(s){
+    toolbar.classList.toggle("hidden", s.toolbar==="hidden");
+    $("#ovPicker").classList.toggle("on", !!s.picker);
+    $("#ovBrowser").classList.toggle("on", !!s.browser);
+    $("#frame").classList.toggle("on", !!s.sharing);
+    $("#stopbar").classList.toggle("on", !!s.sharing);
+    $("#shareBtn").classList.toggle("pulse", false);
+    $("#pickShare").classList.toggle("pulse", false);
+    $("#cShare").classList.toggle("pulse", false);
+  }
+
+  function moveCursor(sel, click){
+    if(!sel){ cursor.style.opacity=0; return; }
+    var el=$(sel); if(!el){ cursor.style.opacity=0; return; }
+    cursor.style.opacity=1;
+    var a=stage.getBoundingClientRect(), b=el.getBoundingClientRect();
+    var x=b.left-a.left+b.width/2-4, y=b.top-a.top+b.height/2-4;
+    cursor.style.transform="translate("+x+"px,"+y+"px)";
+    if(click){
+      setTimeout(function(){
+        cursor.classList.add("click");
+        if(el.classList.contains("share")||el.id==="pickShare"||el.id==="cShare") el.classList.add("pulse");
+        setTimeout(function(){cursor.classList.remove("click")},420);
+      },900);
+    }
+  }
+
+  function render(){
+    var steps=STEPS[path], s=steps[i];
+    $("#stepno").textContent="Step "+(i+1)+" of "+steps.length;
+    $("#title").innerHTML=s.t;
+    $("#body").innerHTML=s.b;
+    applyScene(s.st||{});
+    moveCursor(s.cur, s.click);
+    if(s.then && s.then.toolbar==="show"){
+      setTimeout(function(){ if(STEPS[path][i]===s) toolbar.classList.remove("hidden"); },1900);
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".pip"),function(p,n){p.classList.toggle("on",n===i)});
+    $("#prev").disabled = i===0;
+    $("#next").textContent = i===steps.length-1 ? "Start over ↻" : "Next →";
+    $("#finish").hidden = i!==steps.length-1;
+    restart();
+  }
+
+  function restart(){
+    t0=Date.now(); cancelAnimationFrame(raf); clearTimeout(timer);
+    if(!playing){ return; }
+    (function tick(){
+      var p=Math.min(1,(Date.now()-t0)/DUR);
+      $("#fill").style.width=(p*100)+"%";
+      if(p<1) raf=requestAnimationFrame(tick);
+    })();
+    timer=setTimeout(function(){ go(i+1); }, DUR);
+  }
+
+  function go(n){
+    var len=STEPS[path].length;
+    if(n>=len){ n=0; }
+    if(n<0) n=0;
+    i=n; render();
+  }
+
+  function start(p){
+    path=p; i=0;
+    $("#chooser").hidden=true;
+    $("#player").hidden=false;
+    $("#pathName").textContent = p==="app" ? "Zoom app" : "Web browser";
+    setChrome();
+    var pips=$("#pips"); pips.innerHTML="";
+    STEPS[p].forEach(function(_,n){
+      var b=document.createElement("button");
+      b.className="pip"; b.setAttribute("aria-label","Step "+(n+1));
+      b.onclick=function(){ go(n); };
+      pips.appendChild(b);
+    });
+    playing=true; $("#play").textContent="⏸ Pause";
+    render();
+    $("#player").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".choice"),function(c){
+    c.onclick=function(){ start(c.dataset.path); };
+  });
+  $("#switchPath").onclick=function(){
+    clearTimeout(timer); cancelAnimationFrame(raf);
+    $("#player").hidden=true; $("#chooser").hidden=false;
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+  $("#next").onclick=function(){ go(i+1); };
+  $("#prev").onclick=function(){ go(i-1); };
+  $("#play").onclick=function(){
+    playing=!playing;
+    $("#play").textContent = playing ? "⏸ Pause" : "▶ Play";
+    if(playing) restart(); else { clearTimeout(timer); cancelAnimationFrame(raf); }
+  };
+  document.addEventListener("keydown",function(e){
+    if($("#player").hidden) return;
+    if(e.key==="ArrowRight") go(i+1);
+    if(e.key==="ArrowLeft") go(i-1);
+    if(e.key===" "){ e.preventDefault(); $("#play").click(); }
+  });
+  window.addEventListener("resize",function(){ if(path) moveCursor(STEPS[path][i].cur,false); });
+})();
+</script>
+</body>
+</html>
