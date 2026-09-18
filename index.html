@@ -143,7 +143,10 @@
   .tb-main{flex:1;min-width:0;padding:6px 7px;display:flex;flex-direction:column;gap:5px}
   .tb-top{display:flex;align-items:center;justify-content:space-between}
   .tb-top b{font-size:10px;color:#1b2540;font-weight:800}
-  .tb-coin{font-size:7px;font-weight:800;color:#8a6a1f;background:#fdf1d6;border-radius:99px;padding:2px 6px}
+  .tb-coin{font-size:7px;font-weight:800;color:#8a6a1f;background:#fdf1d6;border-radius:99px;padding:2px 6px;
+    display:inline-flex;align-items:center;gap:4px}
+  .tb-coin::before{content:"";width:7px;height:7px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#ffd977,#e8a723);flex:0 0 auto}
   .tb-grid{display:flex;gap:5px;align-items:stretch}
   .tb-card{background:#fff;border:1px solid #d8dde5;border-radius:7px;padding:6px}
   .tb-goals{flex:1;min-width:0;display:flex;gap:7px;align-items:center}
@@ -162,11 +165,12 @@
   .tb-streak{width:74px;flex:0 0 auto;background:#fdf0e8;border-color:#f6d5c2;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:1px}
   .tb-streak u{text-decoration:none;font-size:6px;color:#a4623f;font-weight:700}
-  .tb-streak b{font-size:13px;color:#e0561f;font-weight:800;line-height:1}
-  .tb-courses{display:flex;gap:5px}
-  .tb-course{flex:1;min-width:0;background:#fff;border:1px solid #d8dde5;border-radius:7px;padding:5px;overflow:hidden}
+  .tb-streak b{font-size:14px;color:#e0561f;font-weight:800;line-height:1.1;white-space:nowrap}
+  .tb-courses{display:flex;gap:5px;flex:1;min-height:0}
+  .tb-course{flex:1;min-width:0;background:#fff;border:1px solid #d8dde5;border-radius:7px;padding:5px;
+    overflow:hidden;display:flex;flex-direction:column}
   .tb-course.done{border-color:#7cc49a}
-  .tb-thumb{height:22px;border-radius:5px;margin-bottom:4px}
+  .tb-thumb{flex:1;min-height:14px;border-radius:5px;margin-bottom:4px}
   .tb-thumb.r{background:linear-gradient(140deg,#dff0e6,#bcdcc8)}
   .tb-thumb.m{background:linear-gradient(140deg,#dbe8fb,#b9cff3)}
   .tb-course u{text-decoration:none;display:flex;justify-content:space-between;align-items:center;font-size:7px;
@@ -329,7 +333,7 @@
         <div class="tb">
           <div class="tb-rail"><span class="lg"></span><span></span><span></span></div>
           <div class="tb-main">
-            <div class="tb-top"><b>Welcome, Luke</b><span class="tb-coin">&#129689; 495</span></div>
+            <div class="tb-top"><b>Welcome, Luke</b><span class="tb-coin">495</span></div>
             <div class="tb-grid">
               <div class="tb-card tb-goals">
                 <div class="tb-ring">
