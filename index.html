@@ -195,6 +195,17 @@
   .pip.gap{margin-left:12px;position:relative}
   .pip.gap::before{content:"";position:absolute;left:-8px;top:-1px;width:1px;height:11px;background:#2e4370}
 
+  /* spotlight — dims the frame and rings whatever the step is talking about */
+  .spot{position:absolute;left:0;top:0;width:0;height:0;border-radius:9px;border:2px solid var(--gold);
+    box-shadow:0 0 0 9999px rgba(4,8,17,.58), 0 0 16px rgba(255,197,61,.5), inset 0 0 12px rgba(255,197,61,.25);
+    z-index:15;pointer-events:none;opacity:0;
+    transition:opacity .35s, left .5s cubic-bezier(.4,.1,.2,1), top .5s cubic-bezier(.4,.1,.2,1),
+               width .5s cubic-bezier(.4,.1,.2,1), height .5s cubic-bezier(.4,.1,.2,1)}
+  .spot.on{opacity:1}
+  .spot::after{content:"";position:absolute;inset:-2px;border-radius:9px;border:2px solid var(--gold);
+    animation:halo 1.8s ease-out infinite}
+  @keyframes halo{0%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
+
   /* cursor */
   .cursor{position:absolute;width:26px;height:26px;left:0;top:0;z-index:20;pointer-events:none;
     transition:transform .85s cubic-bezier(.4,.1,.2,1);filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
@@ -282,7 +293,7 @@
           <span class="dots"><span></span><span></span><span></span></span>
           <span id="chromeSlot"></span>
         </div>
-        <div class="gallery">
+        <div class="gallery" id="gallery">
           <div class="tile you"><div class="face">🥔</div><span>#COOL#POTATO.</span></div>
           <div class="tile"><div class="face">🧢</div><span>Coach Eric</span></div>
         </div>
@@ -363,6 +374,8 @@
       <div class="stopbar" id="stopbar">You are sharing your screen <span class="stopbtn">Stop Share</span></div>
       <div class="sharingframe" id="frame"></div>
 
+      <div class="spot" id="spot"></div>
+
       <div class="cursor" id="cursor">
         <svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 2l14 9-6 1 3.5 7-2.6 1.2L9.4 13 4 17z" fill="#fff" stroke="#111" stroke-width="1.1" stroke-linejoin="round"/></svg>
       </div>
@@ -411,81 +424,81 @@
   var STEPS = {
     app: [
       { ch:C1, t:"You're in the Zoom app",
-        b:"Good \u2014 this is the easier one. Look at the top: <b>no web address</b>. Everything you need is along the bottom edge.",
-        st:{}, cur:null },
+        b:"Look along the top \u2014 <b>no web address</b>, just the meeting name. That means the Zoom app. <b>If you DO see a web address up there</b>, you're in a browser instead: tap <b>tap to switch</b> above and follow that one.",
+        st:{}, hl:"#chromeSlot", cur:null },
       { ch:C1, t:"Wiggle your mouse first",
-        b:"The buttons <b>hide by themselves</b> after a few seconds. They're not gone. Move the mouse and the black bar slides back up.",
-        st:{toolbar:"hidden"}, cur:null, then:{toolbar:"show"} },
+        b:"This black bar <b>hides by itself</b> after a few seconds. It's not gone. Move the mouse and it slides back up.",
+        st:{toolbar:"hidden"}, hl:"#toolbar", hlDelay:2300, cur:null, then:{toolbar:"show"} },
       { ch:C1, t:"Click the green button",
         b:"Middle of the bottom bar, the only green one: <b>Share Screen</b>. If you can't see it, wiggle the mouse again.",
-        st:{}, cur:"#shareBtn", click:true },
+        st:{}, hl:"#shareBtn", cur:"#shareBtn", click:true },
       { ch:C1, t:"Zoom asks what to show",
         b:"A box opens with little pictures of everything you have open. Click the first one \u2014 <b>Screen</b>. It turns blue when it's picked.",
-        st:{picker:true}, cur:"#pickScreen", click:true },
+        st:{picker:true}, hl:"#pickScreen", cur:"#pickScreen", click:true },
       { ch:C1, t:"Now click Share",
         b:"Bottom right of that box, the blue <b>Share</b> button. Picking the screen isn't enough \u2014 you have to click Share too. <b>This is the step everyone forgets.</b>",
-        st:{picker:true}, cur:"#pickShare", click:true },
+        st:{picker:true}, hl:"#pickShare", cur:"#pickShare", click:true },
       { ch:C1, t:"You're sharing! \ud83c\udf89",
-        b:"A <b>green border</b> goes round your screen and a little bar appears at the top. When you're finished, click the red <b>Stop Share</b>.",
-        st:{sharing:true}, cur:null },
+        b:"A <b>green border</b> goes round your screen and this little bar appears at the top. When you're finished, click the red <b>Stop Share</b>.",
+        st:{sharing:true}, hl:"#stopbar", cur:null },
 
       { ch:C2, t:"Showing me TimeBack",
-        b:"Same buttons, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
-        st:{}, cur:null },
+        b:"Same green button, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
+        st:{}, hl:"#shareBtn", cur:null },
       { ch:C2, t:"Open TimeBack FIRST \u2014 this is the trap",
-        b:"Zoom can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack, then click back to Zoom.",
-        st:{tbopen:true}, cur:null },
+        b:"Zoom can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack like this, then click back to Zoom.",
+        st:{tbopen:true}, hl:"#appwin", hlDelay:700, cur:null },
       { ch:C2, t:"Share Screen, then pick TimeBack",
         b:"Green <b>Share Screen</b> like before \u2014 but this time click the tile that says <b>TimeBack</b> instead of Screen.",
-        st:{tbopen:true, picker:true, pickTB:true}, cur:"#pickTimeback", click:true },
+        st:{tbopen:true, picker:true, pickTB:true}, hl:"#pickTimeback", cur:"#pickTimeback", click:true },
       { ch:C2, t:"Then click Share",
         b:"Same blue <b>Share</b> button, bottom right. Picking TimeBack isn't enough on its own.",
-        st:{tbopen:true, picker:true, pickTB:true}, cur:"#pickShare", click:true },
+        st:{tbopen:true, picker:true, pickTB:true}, hl:"#pickShare", cur:"#pickShare", click:true },
       { ch:C2, t:"Now I only see TimeBack",
-        b:"Just TimeBack, nothing else. <b>Careful:</b> if you click over to something else, I stop seeing you \u2014 the picture freezes. When that happens, Stop Share and start again.",
-        st:{tbopen:true, tbsharing:true}, cur:null },
+        b:"Just this window, nothing else. <b>Careful:</b> if you click over to something else, I stop seeing you \u2014 the picture freezes. When that happens, Stop Share and start again.",
+        st:{tbopen:true, tbsharing:true}, hl:"#appwin", hlDelay:700, cur:null },
       { ch:C2, t:"Not sure? Share the whole Screen",
-        b:"If you only remember one thing, remember this: <b>sharing Screen always works.</b> I'll see everything you do, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
-        st:{sharing:true}, cur:null }
+        b:"If you only remember one thing, remember this: <b>sharing Screen always works.</b> I see everything, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
+        st:{sharing:true}, hl:"#gallery", cur:null }
     ],
     web: [
       { ch:C1, t:"You're in a web browser",
-        b:"You can see a <b>web address</b> at the top. This one works a bit differently \u2014 <b>your browser</b> does the asking, not Zoom.",
-        st:{}, cur:null },
+        b:"See the <b>web address</b> along the top? That's how you know you're in a browser, not the app. <b>If you DON'T see one up there</b>, you're in the Zoom app: tap <b>tap to switch</b> above and follow that one instead.",
+        st:{}, hl:"#chromeSlot", cur:null },
       { ch:C1, t:"Wiggle your mouse first",
-        b:"The buttons <b>hide by themselves</b> after a few seconds. They're not gone. Move the mouse and the black bar slides back up.",
-        st:{toolbar:"hidden"}, cur:null, then:{toolbar:"show"} },
+        b:"This black bar <b>hides by itself</b> after a few seconds. It's not gone. Move the mouse and it slides back up.",
+        st:{toolbar:"hidden"}, hl:"#toolbar", hlDelay:2300, cur:null, then:{toolbar:"show"} },
       { ch:C1, t:"Click the green button",
         b:"Same place as always: middle of the bottom bar, the green <b>Share Screen</b>.",
-        st:{}, cur:"#shareBtn", click:true },
+        st:{}, hl:"#shareBtn", cur:"#shareBtn", click:true },
       { ch:C1, t:"Your browser pops up its own box",
-        b:"This one looks different \u2014 white, not dark. That's normal. Along the top pick <b>Entire Screen</b>.",
-        st:{browser:true}, cur:"#tabEntire", click:true },
+        b:"This one looks different \u2014 white, not dark. That's normal, it's your browser asking, not Zoom. Along the top pick <b>Entire Screen</b>.",
+        st:{browser:true}, hl:"#tabEntire", cur:"#tabEntire", click:true },
       { ch:C1, t:"Click the picture, then Share",
         b:"Click the picture of your screen so it gets a blue outline, then the blue <b>Share</b> button. <b>Both clicks, or nothing happens.</b>",
-        st:{browser:true}, cur:"#cShare", click:true },
+        st:{browser:true}, hl:"#cShare", cur:"#cShare", click:true },
       { ch:C1, t:"You're sharing! \ud83c\udf89",
-        b:"A bar appears telling you you're sharing. When you're finished, click <b>Stop sharing</b>.",
-        st:{sharing:true}, cur:null },
+        b:"This bar appears to tell you you're sharing. When you're finished, click <b>Stop sharing</b>.",
+        st:{sharing:true}, hl:"#stopbar", cur:null },
 
       { ch:C2, t:"Showing me TimeBack",
-        b:"Same buttons, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
-        st:{}, cur:null },
+        b:"Same green button, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
+        st:{}, hl:"#shareBtn", cur:null },
       { ch:C2, t:"Open TimeBack FIRST \u2014 this is the trap",
-        b:"Your browser can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack, then click back to Zoom.",
-        st:{tbopen:true}, cur:null },
+        b:"Your browser can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack like this, then click back to Zoom.",
+        st:{tbopen:true}, hl:"#appwin", hlDelay:700, cur:null },
       { ch:C2, t:"This time pick the Window tab",
         b:"Green <b>Share Screen</b> like before. In the white box, the middle tab is <b>Window</b> \u2014 that's where apps live. <b>Entire Screen</b> won't list them, and <b>Chrome Tab</b> only has web pages.",
-        st:{tbopen:true, browser:true, winTab:true}, cur:"#tabWindow", click:true },
+        st:{tbopen:true, browser:true, winTab:true}, hl:"#tabWindow", cur:"#tabWindow", click:true },
       { ch:C2, t:"Pick TimeBack, then Share",
         b:"Click <b>TimeBack</b> so it gets the blue outline, then the blue <b>Share</b> button. Both clicks.",
-        st:{tbopen:true, browser:true, winTab:true}, cur:"#cShare", click:true },
+        st:{tbopen:true, browser:true, winTab:true}, hl:"#cShare", cur:"#cShare", click:true },
       { ch:C2, t:"Now I only see TimeBack",
-        b:"Just TimeBack, nothing else. <b>Careful:</b> if you click over to something else, I stop seeing you \u2014 the picture freezes. When that happens, stop sharing and start again.",
-        st:{tbopen:true, tbsharing:true}, cur:null },
+        b:"Just this window, nothing else. <b>Careful:</b> if you click over to something else, I stop seeing you \u2014 the picture freezes. When that happens, stop sharing and start again.",
+        st:{tbopen:true, tbsharing:true}, hl:"#appwin", hlDelay:700, cur:null },
       { ch:C2, t:"Not sure? Share the whole Screen",
-        b:"If you only remember one thing, remember this: <b>sharing Entire Screen always works.</b> I'll see everything you do, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
-        st:{sharing:true}, cur:null }
+        b:"If you only remember one thing, remember this: <b>sharing Entire Screen always works.</b> I see everything, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
+        st:{sharing:true}, hl:"#gallery", cur:null }
     ]
   };
 
@@ -519,6 +532,25 @@
     $("#cShare").classList.remove("pulse");
   }
 
+  var spotT=null;
+  function placeSpot(sel, delay){
+    clearTimeout(spotT);
+    var spot=$("#spot");
+    if(!sel){ spot.classList.remove("on"); return; }
+    spotT=setTimeout(function(){
+      var el=$(sel);
+      if(!el){ spot.classList.remove("on"); return; }
+      var a=stage.getBoundingClientRect(), b=el.getBoundingClientRect();
+      if(!b.width||!b.height){ spot.classList.remove("on"); return; }
+      var pad=6;
+      spot.style.left  =(b.left-a.left-pad)+"px";
+      spot.style.top   =(b.top -a.top -pad)+"px";
+      spot.style.width =(b.width +pad*2)+"px";
+      spot.style.height=(b.height+pad*2)+"px";
+      spot.classList.add("on");
+    }, delay==null?480:delay);
+  }
+
   function moveCursor(sel, click){
     if(!sel){ cursor.style.opacity=0; return; }
     var el=$(sel); if(!el){ cursor.style.opacity=0; return; }
@@ -543,6 +575,7 @@
     $("#title").innerHTML=s.t;
     $("#body").innerHTML=s.b;
     applyScene(s.st||{});
+    placeSpot(s.hl, s.hlDelay);
     moveCursor(s.cur, s.click);
     if(s.then && s.then.toolbar==="show"){
       setTimeout(function(){ if(STEPS[path][i]===s) toolbar.classList.remove("hidden"); },1900);
@@ -615,7 +648,12 @@
     if(e.key==="ArrowLeft") go(i-1);
     if(e.key===" "){ e.preventDefault(); $("#play").click(); }
   });
-  window.addEventListener("resize",function(){ if(path) moveCursor(STEPS[path][i].cur,false); });
+  window.addEventListener("resize",function(){
+    if(!path) return;
+    var st=STEPS[path][i];
+    moveCursor(st.cur,false);
+    placeSpot(st.hl, 60);
+  });
 })();
 </script>
 </body>
