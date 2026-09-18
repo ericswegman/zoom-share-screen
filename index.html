@@ -126,6 +126,31 @@
   .stopbar.on{transform:translate(-50%,0)}
   .stopbtn{background:var(--red);color:#fff;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700}
 
+  /* TimeBack app window */
+  .appwin{position:absolute;left:8%;top:14%;width:62%;height:58%;background:#f7f9fc;border:3px solid #5b6b8c;
+    border-radius:10px;overflow:hidden;z-index:3;opacity:0;transform:translateY(10px) scale(.97);
+    transition:.4s;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+  .appwin.on{opacity:1;transform:none}
+  .appwin.sharing{border-color:var(--green)}
+  .appwin .bar{background:#1f3a6e;color:#fff;font-size:10px;font-weight:800;padding:6px 10px;letter-spacing:.06em;
+    display:flex;align-items:center;gap:6px}
+  .appwin .bod{padding:10px;display:flex;flex-direction:column;gap:7px}
+  .appwin .row{height:13px;border-radius:4px;background:#dde5f2}
+  .appwin .row.w70{width:70%} .appwin .row.w45{width:45%}
+  .appwin .chip{display:inline-block;background:#2d8cff;color:#fff;font-size:8px;font-weight:800;
+    padding:3px 8px;border-radius:99px;margin-top:2px}
+  .overlay{z-index:10}
+
+  /* chapter + jump */
+  .chapline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .chapter{display:inline-block;background:#26375f;border:1px solid var(--line);color:var(--gold);
+    font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:99px}
+  .jump{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;
+    padding:5px 13px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+  .jump:hover{border-color:var(--gold);color:var(--ink)}
+  .pip.gap{margin-left:12px;position:relative}
+  .pip.gap::before{content:"";position:absolute;left:-8px;top:-1px;width:1px;height:11px;background:#2e4370}
+
   /* cursor */
   .cursor{position:absolute;width:26px;height:26px;left:0;top:0;z-index:20;pointer-events:none;
     transition:transform .85s cubic-bezier(.4,.1,.2,1);filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
@@ -170,7 +195,7 @@
   <header>
     <div class="kicker">Alpha · 1:1 Coaching</div>
     <h1>How to <span class="hl">Share Your Screen</span></h1>
-    <p class="sub">Two minutes, six steps, and then you can show me anything.</p>
+    <p class="sub">Two short lessons: sharing your screen, and showing me TimeBack.</p>
   </header>
 
   <!-- ============ CHOOSER ============ -->
@@ -228,7 +253,7 @@
           <div class="grid">
             <div class="pick sel" id="pickScreen">Screen</div>
             <div class="pick">Whiteboard</div>
-            <div class="pick">TimeBack</div>
+            <div class="pick" id="pickTimeback">TimeBack</div>
           </div>
           <footer>
             <button class="btn-ghost">Cancel</button>
@@ -243,7 +268,7 @@
           <h4>zoom.us wants to share the contents of your screen</h4>
           <div class="ctabs">
             <div class="ctab">Chrome Tab</div>
-            <div class="ctab">Window</div>
+            <div class="ctab" id="tabWindow">Window</div>
             <div class="ctab on" id="tabEntire">Entire Screen</div>
           </div>
           <div class="cbody"><div class="cthumb" id="cthumb">Your whole screen</div></div>
@@ -254,6 +279,15 @@
         </div>
       </div>
 
+      <div class="appwin" id="appwin">
+        <div class="bar">📘 TimeBack</div>
+        <div class="bod">
+          <div class="row w70"></div>
+          <div class="row"></div>
+          <div class="row w45"></div>
+          <span class="chip">TODAY'S GOAL</span>
+        </div>
+      </div>
       <div class="stopbar" id="stopbar">You are sharing your screen <span class="stopbtn">Stop Share</span></div>
       <div class="sharingframe" id="frame"></div>
 
@@ -263,6 +297,10 @@
     </div>
 
     <div class="caption">
+      <div class="chapline">
+        <span class="chapter" id="chapter"></span>
+        <button class="jump" id="jump">Skip to the TimeBack part →</button>
+      </div>
       <div class="stepno" id="stepno">Step 1</div>
       <h2 id="title"></h2>
       <p id="body"></p>
@@ -278,11 +316,12 @@
     </div>
 
     <div class="finish" id="finish" hidden>
-      <h3>🥔 That's it. You can share your screen.</h3>
+      <h3>&#129364; That's it \u2014 both ways.</h3>
       <ul>
         <li>Wiggle the mouse so the <b>buttons come back</b></li>
         <li>Click the <b>green Share Screen</b> button</li>
-        <li>Pick your screen, then click <b>Share</b></li>
+        <li><b>Whole screen:</b> pick Screen &rarr; click Share. Always works.</li>
+        <li><b>Just TimeBack:</b> open TimeBack <b>first</b>, then pick it in the list &rarr; click Share</li>
         <li>Green border = it's working. <b>Stop Share</b> when you're done.</li>
       </ul>
     </div>
@@ -300,45 +339,84 @@
 
 <script>
 (function(){
+  var C1 = "Sharing your screen", C2 = "Showing TimeBack";
   var STEPS = {
     app: [
-      { t:"You're in the Zoom app",
-        b:"Good — this is the easier one. Look at the top: <b>no web address</b>. Everything you need is along the bottom edge.",
+      { ch:C1, t:"You're in the Zoom app",
+        b:"Good \u2014 this is the easier one. Look at the top: <b>no web address</b>. Everything you need is along the bottom edge.",
         st:{}, cur:null },
-      { t:"Wiggle your mouse first",
+      { ch:C1, t:"Wiggle your mouse first",
         b:"The buttons <b>hide by themselves</b> after a few seconds. They're not gone. Move the mouse and the black bar slides back up.",
         st:{toolbar:"hidden"}, cur:null, then:{toolbar:"show"} },
-      { t:"Click the green button",
+      { ch:C1, t:"Click the green button",
         b:"Middle of the bottom bar, the only green one: <b>Share Screen</b>. If you can't see it, wiggle the mouse again.",
         st:{}, cur:"#shareBtn", click:true },
-      { t:"Zoom asks what to show",
-        b:"A box opens with little pictures of everything you have open. Click the first one — <b>Screen</b>. It turns blue when it's picked.",
+      { ch:C1, t:"Zoom asks what to show",
+        b:"A box opens with little pictures of everything you have open. Click the first one \u2014 <b>Screen</b>. It turns blue when it's picked.",
         st:{picker:true}, cur:"#pickScreen", click:true },
-      { t:"Now click Share",
-        b:"Bottom right of that box, the blue <b>Share</b> button. Picking the screen isn't enough — you have to click Share too. <b>This is the step everyone forgets.</b>",
+      { ch:C1, t:"Now click Share",
+        b:"Bottom right of that box, the blue <b>Share</b> button. Picking the screen isn't enough \u2014 you have to click Share too. <b>This is the step everyone forgets.</b>",
         st:{picker:true}, cur:"#pickShare", click:true },
-      { t:"You're sharing! 🎉",
+      { ch:C1, t:"You're sharing! \ud83c\udf89",
         b:"A <b>green border</b> goes round your screen and a little bar appears at the top. When you're finished, click the red <b>Stop Share</b>.",
+        st:{sharing:true}, cur:null },
+
+      { ch:C2, t:"Showing me TimeBack",
+        b:"Same buttons, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
+        st:{}, cur:null },
+      { ch:C2, t:"Open TimeBack FIRST \u2014 this is the trap",
+        b:"Zoom can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack, then click back to Zoom.",
+        st:{tbopen:true}, cur:null },
+      { ch:C2, t:"Share Screen, then pick TimeBack",
+        b:"Green <b>Share Screen</b> like before \u2014 but this time click the tile that says <b>TimeBack</b> instead of Screen.",
+        st:{tbopen:true, picker:true, pickTB:true}, cur:"#pickTimeback", click:true },
+      { ch:C2, t:"Then click Share",
+        b:"Same blue <b>Share</b> button, bottom right. Picking TimeBack isn't enough on its own.",
+        st:{tbopen:true, picker:true, pickTB:true}, cur:"#pickShare", click:true },
+      { ch:C2, t:"Now I only see TimeBack",
+        b:"Just TimeBack, nothing else. <b>Careful:</b> if you click over to something else, I stop seeing you \u2014 the picture freezes. When that happens, Stop Share and start again.",
+        st:{tbopen:true, tbsharing:true}, cur:null },
+      { ch:C2, t:"Not sure? Share the whole Screen",
+        b:"If you only remember one thing, remember this: <b>sharing Screen always works.</b> I'll see everything you do, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
         st:{sharing:true}, cur:null }
     ],
     web: [
-      { t:"You're in a web browser",
-        b:"You can see a <b>web address</b> at the top. This one works a bit differently — <b>your browser</b> does the asking, not Zoom.",
+      { ch:C1, t:"You're in a web browser",
+        b:"You can see a <b>web address</b> at the top. This one works a bit differently \u2014 <b>your browser</b> does the asking, not Zoom.",
         st:{}, cur:null },
-      { t:"Wiggle your mouse first",
+      { ch:C1, t:"Wiggle your mouse first",
         b:"The buttons <b>hide by themselves</b> after a few seconds. They're not gone. Move the mouse and the black bar slides back up.",
         st:{toolbar:"hidden"}, cur:null, then:{toolbar:"show"} },
-      { t:"Click the green button",
+      { ch:C1, t:"Click the green button",
         b:"Same place as always: middle of the bottom bar, the green <b>Share Screen</b>.",
         st:{}, cur:"#shareBtn", click:true },
-      { t:"Your browser pops up its own box",
-        b:"This one looks different — white, not dark. That's normal. Along the top pick <b>Entire Screen</b>.",
+      { ch:C1, t:"Your browser pops up its own box",
+        b:"This one looks different \u2014 white, not dark. That's normal. Along the top pick <b>Entire Screen</b>.",
         st:{browser:true}, cur:"#tabEntire", click:true },
-      { t:"Click the picture, then Share",
+      { ch:C1, t:"Click the picture, then Share",
         b:"Click the picture of your screen so it gets a blue outline, then the blue <b>Share</b> button. <b>Both clicks, or nothing happens.</b>",
         st:{browser:true}, cur:"#cShare", click:true },
-      { t:"You're sharing! 🎉",
+      { ch:C1, t:"You're sharing! \ud83c\udf89",
         b:"A bar appears telling you you're sharing. When you're finished, click <b>Stop sharing</b>.",
+        st:{sharing:true}, cur:null },
+
+      { ch:C2, t:"Showing me TimeBack",
+        b:"Same buttons, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
+        st:{}, cur:null },
+      { ch:C2, t:"Open TimeBack FIRST \u2014 this is the trap",
+        b:"Your browser can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack, then click back to Zoom.",
+        st:{tbopen:true}, cur:null },
+      { ch:C2, t:"This time pick the Window tab",
+        b:"Green <b>Share Screen</b> like before. In the white box, the middle tab is <b>Window</b> \u2014 that's where apps live. <b>Entire Screen</b> won't list them, and <b>Chrome Tab</b> only has web pages.",
+        st:{tbopen:true, browser:true, winTab:true}, cur:"#tabWindow", click:true },
+      { ch:C2, t:"Pick TimeBack, then Share",
+        b:"Click <b>TimeBack</b> so it gets the blue outline, then the blue <b>Share</b> button. Both clicks.",
+        st:{tbopen:true, browser:true, winTab:true}, cur:"#cShare", click:true },
+      { ch:C2, t:"Now I only see TimeBack",
+        b:"Just TimeBack, nothing else. <b>Careful:</b> if you click over to something else, I stop seeing you \u2014 the picture freezes. When that happens, stop sharing and start again.",
+        st:{tbopen:true, tbsharing:true}, cur:null },
+      { ch:C2, t:"Not sure? Share the whole Screen",
+        b:"If you only remember one thing, remember this: <b>sharing Entire Screen always works.</b> I'll see everything you do, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
         st:{sharing:true}, cur:null }
     ]
   };
@@ -360,10 +438,17 @@
     $("#ovPicker").classList.toggle("on", !!s.picker);
     $("#ovBrowser").classList.toggle("on", !!s.browser);
     $("#frame").classList.toggle("on", !!s.sharing);
-    $("#stopbar").classList.toggle("on", !!s.sharing);
-    $("#shareBtn").classList.toggle("pulse", false);
-    $("#pickShare").classList.toggle("pulse", false);
-    $("#cShare").classList.toggle("pulse", false);
+    $("#stopbar").classList.toggle("on", !!(s.sharing||s.tbsharing));
+    $("#appwin").classList.toggle("on", !!(s.tbopen||s.tbsharing));
+    $("#appwin").classList.toggle("sharing", !!s.tbsharing);
+    $("#pickScreen").classList.toggle("sel", !s.pickTB);
+    $("#pickTimeback").classList.toggle("sel", !!s.pickTB);
+    $("#tabEntire").classList.toggle("on", !s.winTab);
+    $("#tabWindow").classList.toggle("on", !!s.winTab);
+    $("#cthumb").textContent = s.winTab ? "TimeBack" : "Your whole screen";
+    $("#shareBtn").classList.remove("pulse");
+    $("#pickShare").classList.remove("pulse");
+    $("#cShare").classList.remove("pulse");
   }
 
   function moveCursor(sel, click){
@@ -385,6 +470,8 @@
   function render(){
     var steps=STEPS[path], s=steps[i];
     $("#stepno").textContent="Step "+(i+1)+" of "+steps.length;
+    $("#chapter").textContent=s.ch;
+    $("#jump").hidden = s.ch!==C1;
     $("#title").innerHTML=s.t;
     $("#body").innerHTML=s.b;
     applyScene(s.st||{});
@@ -426,7 +513,9 @@
     var pips=$("#pips"); pips.innerHTML="";
     STEPS[p].forEach(function(_,n){
       var b=document.createElement("button");
-      b.className="pip"; b.setAttribute("aria-label","Step "+(n+1));
+      b.className = n===6 ? "pip gap" : "pip";
+      b.setAttribute("aria-label","Step "+(n+1));
+      b.title = STEPS[p][n].ch;
       b.onclick=function(){ go(n); };
       pips.appendChild(b);
     });
@@ -443,6 +532,7 @@
     $("#player").hidden=true; $("#chooser").hidden=false;
     window.scrollTo({top:0,behavior:"smooth"});
   };
+  $("#jump").onclick=function(){ go(6); };
   $("#next").onclick=function(){ go(i+1); };
   $("#prev").onclick=function(){ go(i-1); };
   $("#play").onclick=function(){
