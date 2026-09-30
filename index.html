@@ -478,10 +478,10 @@
 
       { ch:C3, t:"Where did the buttons go?",
         b:"While you share, Zoom <b>hides the bottom bar</b> and tucks its buttons into a little green tab at the <b>very top</b> of your screen. They're not gone \u2014 they moved.",
-        st:{sharing:true, stopMini:true}, hl:"#stopbar", cur:null },
+        st:{sharing:true, stopMini:true, toolbar:"hidden"}, hl:"#stopbar", cur:null },
       { ch:C3, t:"Mouse to the top, then Stop Share",
         b:"Push your mouse right up to the <b>top edge</b> of the screen and the tab opens. Click the red <b>Stop Share</b>.",
-        st:{sharing:true, stopMini:true}, then:{stopbar:"open"}, hl:"#stopBtn", hlDelay:1300, cur:"#stopBtn", click:true },
+        st:{sharing:true, stopMini:true, toolbar:"hidden"}, then:{stopbar:"open"}, hl:"#stopBtn", hlDelay:1300, cur:"#stopBtn", click:true },
       { ch:C3, t:"Green border gone = you stopped",
         b:"The green border disappears and the normal buttons come back at the bottom. <b>Can't find the tab at all?</b> Press <b>Alt + S</b> on Windows, or <b>Command + Shift + S</b> on a Mac.",
         st:{}, hl:"#gallery", cur:null }
