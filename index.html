@@ -124,7 +124,18 @@
     border-top:0;border-radius:0 0 10px 10px;padding:6px 12px;display:flex;align-items:center;gap:9px;
     font-size:10px;color:#c9d2e4;transition:transform .35s;z-index:5}
   .stopbar.on{transform:translate(-50%,0)}
-  .stopbtn{background:var(--red);color:#fff;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700}
+  .stopbtn{background:var(--red);color:#fff;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;position:relative}
+  .stopbtn.pulse::after{content:"";position:absolute;inset:-5px;border-radius:10px;border:3px solid var(--red);animation:ring 1.3s infinite}
+  .stopbar.mini{background:var(--green);border-color:var(--green);color:#fff;padding:3px 12px;font-weight:700}
+  .stopbar.mini .stopbtn{display:none}
+  /* Chrome's own "is sharing your screen" bar, bottom of the screen */
+  .chromebar{position:absolute;left:50%;bottom:10px;transform:translate(-50%,140%);background:#f4f6fa;color:#1a1f2b;
+    border-radius:9px;padding:7px 10px 7px 14px;display:flex;align-items:center;gap:10px;font-size:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.55);transition:transform .4s;z-index:6;white-space:nowrap}
+  .chromebar.on{transform:translate(-50%,0)}
+  .chromebar .cbs{background:#1a73e8;color:#fff;border-radius:6px;padding:5px 12px;font-weight:700;position:relative}
+  .chromebar .cbs.pulse::after{content:"";position:absolute;inset:-5px;border-radius:10px;border:3px solid #1a73e8;animation:ring 1.3s infinite}
+  .chromebar .cbh{color:#1a73e8;font-weight:700;padding:5px 8px;border-radius:6px}
 
   /* TimeBack app window — modelled on app.alphalearn.school/home */
   .appwin{position:absolute;left:7%;top:12%;width:66%;height:62%;background:#f8f9fa;border:3px solid #5b6b8c;
@@ -250,13 +261,13 @@
   <header>
     <div class="kicker">Alpha · 1:1 Coaching</div>
     <h1>How to <span class="hl">Share Your Screen</span></h1>
-    <p class="sub">Two lessons: sharing your <b>whole screen</b>, and sharing <b>just TimeBack</b>.</p>
+    <p class="sub">Three lessons: sharing your <b>whole screen</b>, sharing <b>just TimeBack</b>, and <b>stopping</b> when you're done.</p>
   </header>
 
   <!-- ============ CHOOSER ============ -->
   <section class="panel" id="chooser">
     <p class="q">First — which Zoom are you in?</p>
-    <p class="qsub">This is the part that got us last time. They look almost the same, but the buttons live in different places. Pick one and you'll get both lessons.</p>
+    <p class="qsub">This is the part that got us last time. They look almost the same, but the buttons live in different places. Pick one and you'll get all three lessons.</p>
     <div class="choices">
       <button class="choice" data-path="app">
         <div class="tellbar">
@@ -285,6 +296,7 @@
     <div class="strip">
       <button class="lesson" id="lesson1"><span class="n">1</span><span class="lbl">Sharing your whole screen</span></button>
       <button class="lesson" id="lesson2"><span class="n">2</span><span class="lbl">Sharing just TimeBack</span></button>
+      <button class="lesson" id="lesson3"><span class="n">3</span><span class="lbl">Stopping your share</span></button>
     </div>
 
     <div class="stage" id="stage">
@@ -371,7 +383,8 @@
           </div>
         </div>
       </div>
-      <div class="stopbar" id="stopbar">You are sharing your screen <span class="stopbtn">Stop Share</span></div>
+      <div class="stopbar" id="stopbar"><span id="stopLbl">You are sharing your screen</span> <span class="stopbtn" id="stopBtn">Stop Share</span></div>
+      <div class="chromebar" id="chromebar">zoom.us is sharing your screen. <span class="cbs" id="cbStop">Stop sharing</span><span class="cbh" id="cbHide">Hide</span></div>
       <div class="sharingframe" id="frame"></div>
 
       <div class="spot" id="spot"></div>
@@ -397,13 +410,15 @@
     </div>
 
     <div class="finish" id="finish" hidden>
-      <h3>&#129364; That's it \u2014 both ways.</h3>
+      <h3>&#129364; That's it \u2014 start to finish.</h3>
       <ul>
         <li>Wiggle the mouse so the <b>buttons come back</b></li>
         <li>Click the <b>green Share Screen</b> button</li>
         <li><b>Whole screen:</b> pick Screen &rarr; click Share. Always works.</li>
         <li><b>Just TimeBack:</b> open TimeBack <b>first</b>, then pick it in the list &rarr; click Share</li>
-        <li>Green border = it's working. <b>Stop Share</b> when you're done.</li>
+        <li>Green border = it's working.</li>
+        <li><b>To stop in the app:</b> mouse to the <b>very top</b> of the screen &rarr; red <b>Stop Share</b></li>
+        <li><b>To stop in a browser:</b> <b>Stop sharing</b> on the white bar at the <b>bottom</b> \u2014 not Hide</li>
       </ul>
     </div>
 
@@ -420,7 +435,7 @@
 
 <script>
 (function(){
-  var C1 = "Sharing your screen", C2 = "Showing TimeBack";
+  var C1 = "Sharing your screen", C2 = "Showing TimeBack", C3 = "Stopping your share";
   var STEPS = {
     app: [
       { ch:C1, t:"You're in the Zoom app",
@@ -439,7 +454,7 @@
         b:"Bottom right of that box, the blue <b>Share</b> button. Picking the screen isn't enough \u2014 you have to click Share too. <b>This is the step everyone forgets.</b>",
         st:{picker:true}, hl:"#pickShare", cur:"#pickShare", click:true },
       { ch:C1, t:"You're sharing! \ud83c\udf89",
-        b:"A <b>green border</b> goes round your screen and this little bar appears at the top. When you're finished, click the red <b>Stop Share</b>.",
+        b:"A <b>green border</b> goes round your screen and this little bar appears at the top. Lesson 3 shows you how to <b>stop</b> when you're done.",
         st:{sharing:true}, hl:"#stopbar", cur:null },
 
       { ch:C2, t:"Showing me TimeBack",
@@ -459,7 +474,17 @@
         st:{tbopen:true, tbsharing:true}, hl:"#appwin", hlDelay:700, cur:null },
       { ch:C2, t:"Not sure? Share the whole Screen",
         b:"If you only remember one thing, remember this: <b>sharing Screen always works.</b> I see everything, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
-        st:{sharing:true}, hl:"#gallery", cur:null }
+        st:{sharing:true}, hl:"#gallery", cur:null },
+
+      { ch:C3, t:"Where did the buttons go?",
+        b:"While you share, Zoom <b>hides the bottom bar</b> and tucks its buttons into a little green tab at the <b>very top</b> of your screen. They're not gone \u2014 they moved.",
+        st:{sharing:true, stopMini:true}, hl:"#stopbar", cur:null },
+      { ch:C3, t:"Mouse to the top, then Stop Share",
+        b:"Push your mouse right up to the <b>top edge</b> of the screen and the tab opens. Click the red <b>Stop Share</b>.",
+        st:{sharing:true, stopMini:true}, then:{stopbar:"open"}, hl:"#stopBtn", hlDelay:1300, cur:"#stopBtn", click:true },
+      { ch:C3, t:"Green border gone = you stopped",
+        b:"The green border disappears and the normal buttons come back at the bottom. <b>Can't find the tab at all?</b> Press <b>Alt + S</b> on Windows, or <b>Command + Shift + S</b> on a Mac.",
+        st:{}, hl:"#gallery", cur:null }
     ],
     web: [
       { ch:C1, t:"You're in a web browser",
@@ -478,7 +503,7 @@
         b:"Click the picture of your screen so it gets a blue outline, then the blue <b>Share</b> button. <b>Both clicks, or nothing happens.</b>",
         st:{browser:true}, hl:"#cShare", cur:"#cShare", click:true },
       { ch:C1, t:"You're sharing! \ud83c\udf89",
-        b:"This bar appears to tell you you're sharing. When you're finished, click <b>Stop sharing</b>.",
+        b:"This bar appears to tell you you're sharing. Lesson 3 shows you how to <b>stop</b> when you're done.",
         st:{sharing:true}, hl:"#stopbar", cur:null },
 
       { ch:C2, t:"Showing me TimeBack",
@@ -498,7 +523,20 @@
         st:{tbopen:true, tbsharing:true}, hl:"#appwin", hlDelay:700, cur:null },
       { ch:C2, t:"Not sure? Share the whole Screen",
         b:"If you only remember one thing, remember this: <b>sharing Entire Screen always works.</b> I see everything, you can click anywhere, and nothing freezes. Use TimeBack-only once you've got the hang of it.",
-        st:{sharing:true}, hl:"#gallery", cur:null }
+        st:{sharing:true}, hl:"#gallery", cur:null },
+
+      { ch:C3, t:"Look at the bottom of your screen",
+        b:"Your browser puts its <b>own white bar</b> at the bottom of the screen that says it's sharing. That's the easiest place to stop.",
+        st:{sharing:true, chromebar:true}, hl:"#chromebar", cur:null },
+      { ch:C3, t:"Click Stop sharing \u2014 NOT Hide",
+        b:"Click the blue <b>Stop sharing</b>. <b>Hide</b> only makes the bar go away \u2014 you'd still be sharing and wouldn't know it.",
+        st:{sharing:true, chromebar:true}, hl:"#cbStop", cur:"#cbStop", click:true },
+      { ch:C3, t:"Clicked Hide by mistake?",
+        b:"No problem. Go back to the <b>Zoom tab</b> and look at the top of the meeting \u2014 there's a red <b>Stop Share</b> there too.",
+        st:{sharing:true}, hl:"#stopBtn", cur:"#stopBtn", click:true },
+      { ch:C3, t:"Green border gone = you stopped",
+        b:"The sharing bar goes away and you're back to the normal meeting. Done!",
+        st:{}, hl:"#gallery", cur:null }
     ]
   };
 
@@ -520,6 +558,8 @@
     $("#ovBrowser").classList.toggle("on", !!s.browser);
     $("#frame").classList.toggle("on", !!s.sharing);
     $("#stopbar").classList.toggle("on", !!(s.sharing||s.tbsharing));
+    $("#stopbar").classList.toggle("mini", !!s.stopMini);
+    $("#chromebar").classList.toggle("on", !!s.chromebar);
     $("#appwin").classList.toggle("on", !!(s.tbopen||s.tbsharing));
     $("#appwin").classList.toggle("sharing", !!s.tbsharing);
     $("#pickScreen").classList.toggle("sel", !s.pickTB);
@@ -530,6 +570,8 @@
     $("#shareBtn").classList.remove("pulse");
     $("#pickShare").classList.remove("pulse");
     $("#cShare").classList.remove("pulse");
+    $("#stopBtn").classList.remove("pulse");
+    $("#cbStop").classList.remove("pulse");
   }
 
   var spotT=null;
@@ -561,7 +603,7 @@
     if(click){
       setTimeout(function(){
         cursor.classList.add("click");
-        if(el.classList.contains("share")||el.id==="pickShare"||el.id==="cShare") el.classList.add("pulse");
+        if(el.classList.contains("share")||/^(pickShare|cShare|stopBtn|cbStop)$/.test(el.id)) el.classList.add("pulse");
         setTimeout(function(){cursor.classList.remove("click")},420);
       },900);
     }
@@ -572,11 +614,15 @@
     $("#stepno").textContent="Step "+(i+1)+" of "+steps.length;
     $("#lesson1").classList.toggle("on", s.ch===C1);
     $("#lesson2").classList.toggle("on", s.ch===C2);
+    $("#lesson3").classList.toggle("on", s.ch===C3);
     $("#title").innerHTML=s.t;
     $("#body").innerHTML=s.b;
     applyScene(s.st||{});
     placeSpot(s.hl, s.hlDelay);
-    moveCursor(s.cur, s.click);
+    if(s.then && s.then.stopbar==="open"){
+      moveCursor(null);
+      setTimeout(function(){ if(STEPS[path][i]===s){ $("#stopbar").classList.remove("mini"); moveCursor(s.cur, s.click); } },1100);
+    } else moveCursor(s.cur, s.click);
     if(s.then && s.then.toolbar==="show"){
       setTimeout(function(){ if(STEPS[path][i]===s) toolbar.classList.remove("hidden"); },1900);
     }
@@ -614,7 +660,7 @@
     var pips=$("#pips"); pips.innerHTML="";
     STEPS[p].forEach(function(_,n){
       var b=document.createElement("button");
-      b.className = n===6 ? "pip gap" : "pip";
+      b.className = (n===6||n===12) ? "pip gap" : "pip";
       b.setAttribute("aria-label","Step "+(n+1));
       b.title = STEPS[p][n].ch;
       b.onclick=function(){ go(n); };
@@ -635,6 +681,7 @@
   };
   $("#lesson1").onclick=function(){ go(0); };
   $("#lesson2").onclick=function(){ go(6); };
+  $("#lesson3").onclick=function(){ go(12); };
   $("#next").onclick=function(){ go(i+1); };
   $("#prev").onclick=function(){ go(i-1); };
   $("#play").onclick=function(){
