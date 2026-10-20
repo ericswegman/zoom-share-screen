@@ -80,8 +80,12 @@
   .tbtn{display:flex;flex-direction:column;align-items:center;gap:3px;color:#c9d2e4;font-size:9px;font-weight:600;
     padding:4px 8px;border-radius:7px}
   .tbtn i{font-size:15px;font-style:normal;line-height:1}
-  .tbtn.share{background:var(--green);color:#fff;padding:7px 14px;border-radius:9px;font-size:11px;position:relative}
-  .tbtn.share.pulse::after{content:"";position:absolute;inset:-5px;border-radius:13px;border:3px solid var(--green);
+  .sharegrp{display:flex;align-items:stretch;gap:3px;position:relative;padding:0}
+  .sh-main{display:flex;flex-direction:column;align-items:center;gap:3px;background:#3d4048;color:#fff;
+    font-size:9px;font-weight:600;padding:4px 11px;border-radius:7px}
+  .sh-main svg{display:block}
+  .sh-caret{background:#3d4048;border-radius:6px;width:15px;margin:5px 0;display:flex;align-items:center;justify-content:center}
+  .sharegrp.pulse::after{content:"";position:absolute;inset:-5px;border-radius:11px;border:3px solid #e8ecf4;
     animation:ring 1.3s infinite}
   @keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.28)}}
 
@@ -312,7 +316,10 @@
         <div class="toolbar" id="toolbar">
           <div class="tbtn"><i>🎤</i>Mute</div>
           <div class="tbtn"><i>🎥</i>Video</div>
-          <div class="tbtn share" id="shareBtn"><i>⬆️</i>Share Screen</div>
+          <div class="sharegrp share" id="shareBtn">
+            <div class="sh-main"><svg width="15" height="13" viewBox="0 0 15 13"><rect x="1" y="1" width="13" height="11" rx="2.2" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M7.5 9.5V4M5 6.3l2.5-2.5 2.5 2.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Share</div>
+            <div class="sh-caret"><svg width="8" height="5" viewBox="0 0 8 5"><path d="M1 4l3-3 3 3" fill="none" stroke="#d6dbe6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
           <div class="tbtn"><i>💬</i>Chat</div>
           <div class="tbtn"><i>😀</i>React</div>
         </div>
@@ -410,15 +417,15 @@
     </div>
 
     <div class="finish" id="finish" hidden>
-      <h3>&#129364; That's it \u2014 start to finish.</h3>
+      <h3>&#129364; That's it &mdash; start to finish.</h3>
       <ul>
         <li>Wiggle the mouse so the <b>buttons come back</b></li>
-        <li>Click the <b>green Share Screen</b> button</li>
+        <li>Click <b>Share</b> on the bottom bar &mdash; the box with an arrow pointing up</li>
         <li><b>Whole screen:</b> pick Screen &rarr; click Share. Always works.</li>
         <li><b>Just TimeBack:</b> open TimeBack <b>first</b>, then pick it in the list &rarr; click Share</li>
         <li>Green border = it's working.</li>
         <li><b>To stop in the app:</b> mouse to the <b>very top</b> of the screen &rarr; red <b>Stop Share</b></li>
-        <li><b>To stop in a browser:</b> <b>Stop sharing</b> on the white bar at the <b>bottom</b> \u2014 not Hide</li>
+        <li><b>To stop in a browser:</b> <b>Stop sharing</b> on the white bar at the <b>bottom</b> &mdash; not Hide</li>
       </ul>
     </div>
 
@@ -444,8 +451,8 @@
       { ch:C1, t:"Wiggle your mouse first",
         b:"This black bar <b>hides by itself</b> after a few seconds. It's not gone. Move the mouse and it slides back up.",
         st:{toolbar:"hidden"}, hl:"#toolbar", hlDelay:2300, cur:null, then:{toolbar:"show"} },
-      { ch:C1, t:"Click the green button",
-        b:"Middle of the bottom bar, the only green one: <b>Share Screen</b>. If you can't see it, wiggle the mouse again.",
+      { ch:C1, t:"Click the Share button",
+        b:"Middle of the bottom bar: <b>Share</b>, the box with an <b>arrow pointing up</b>. It's a little lighter than the buttons around it. If you can't see it, wiggle the mouse again.",
         st:{}, hl:"#shareBtn", cur:"#shareBtn", click:true },
       { ch:C1, t:"Zoom asks what to show",
         b:"A box opens with little pictures of everything you have open. Click the first one \u2014 <b>Screen</b>. It turns blue when it's picked.",
@@ -458,13 +465,13 @@
         st:{sharing:true}, hl:"#stopbar", cur:null },
 
       { ch:C2, t:"Showing me TimeBack",
-        b:"Same green button, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
+        b:"Same <b>Share</b> button, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
         st:{}, hl:"#shareBtn", cur:null },
       { ch:C2, t:"Open TimeBack FIRST \u2014 this is the trap",
         b:"Zoom can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack like this, then click back to Zoom.",
         st:{tbopen:true}, hl:"#appwin", hlDelay:700, cur:null },
-      { ch:C2, t:"Share Screen, then pick TimeBack",
-        b:"Green <b>Share Screen</b> like before \u2014 but this time click the tile that says <b>TimeBack</b> instead of Screen.",
+      { ch:C2, t:"Share, then pick TimeBack",
+        b:"Click <b>Share</b> like before \u2014 but this time click the tile that says <b>TimeBack</b> instead of Screen.",
         st:{tbopen:true, picker:true, pickTB:true}, hl:"#pickTimeback", cur:"#pickTimeback", click:true },
       { ch:C2, t:"Then click Share",
         b:"Same blue <b>Share</b> button, bottom right. Picking TimeBack isn't enough on its own.",
@@ -493,8 +500,8 @@
       { ch:C1, t:"Wiggle your mouse first",
         b:"This black bar <b>hides by itself</b> after a few seconds. It's not gone. Move the mouse and it slides back up.",
         st:{toolbar:"hidden"}, hl:"#toolbar", hlDelay:2300, cur:null, then:{toolbar:"show"} },
-      { ch:C1, t:"Click the green button",
-        b:"Same place as always: middle of the bottom bar, the green <b>Share Screen</b>.",
+      { ch:C1, t:"Click the Share button",
+        b:"Same place as always: middle of the bottom bar, <b>Share</b> \u2014 the box with an <b>arrow pointing up</b>.",
         st:{}, hl:"#shareBtn", cur:"#shareBtn", click:true },
       { ch:C1, t:"Your browser pops up its own box",
         b:"This one looks different \u2014 white, not dark. That's normal, it's your browser asking, not Zoom. Along the top pick <b>Entire Screen</b>.",
@@ -507,13 +514,13 @@
         st:{sharing:true}, hl:"#stopbar", cur:null },
 
       { ch:C2, t:"Showing me TimeBack",
-        b:"Same green button, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
+        b:"Same <b>Share</b> button, one extra trick. You can show me <b>just TimeBack</b> instead of your whole screen \u2014 tidier, and nothing else of yours shows up.",
         st:{}, hl:"#shareBtn", cur:null },
       { ch:C2, t:"Open TimeBack FIRST \u2014 this is the trap",
         b:"Your browser can only offer you apps that are <b>already open</b>. If TimeBack is closed, it won't be in the list and you'll think it's broken. Open TimeBack like this, then click back to Zoom.",
         st:{tbopen:true}, hl:"#appwin", hlDelay:700, cur:null },
       { ch:C2, t:"This time pick the Window tab",
-        b:"Green <b>Share Screen</b> like before. In the white box, the middle tab is <b>Window</b> \u2014 that's where apps live. <b>Entire Screen</b> won't list them, and <b>Chrome Tab</b> only has web pages.",
+        b:"Click <b>Share</b> like before. In the white box, the middle tab is <b>Window</b> \u2014 that's where apps live. <b>Entire Screen</b> won't list them, and <b>Chrome Tab</b> only has web pages.",
         st:{tbopen:true, browser:true, winTab:true}, hl:"#tabWindow", cur:"#tabWindow", click:true },
       { ch:C2, t:"Pick TimeBack, then Share",
         b:"Click <b>TimeBack</b> so it gets the blue outline, then the blue <b>Share</b> button. Both clicks.",
