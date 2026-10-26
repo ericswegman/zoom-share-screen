@@ -77,6 +77,22 @@
   .toolbar{height:50px;background:#1b1b1f;border-top:1px solid #2a2d34;display:flex;align-items:center;
     justify-content:center;gap:10px;flex:0 0 auto;transition:opacity .45s, transform .45s}
   .toolbar.hidden{opacity:0;transform:translateY(12px)}
+
+  /* Zoom Workplace app toolbar — drawn from Eric's 2026-10-26 screenshot */
+  .toolbar.zapp{height:58px;background:#0b0b0d;border-top:1px solid #1f2024;justify-content:space-between;gap:0;padding:0 10px}
+  .zapp .zg{display:flex;align-items:center;gap:clamp(2px,1.2vw,12px)}
+  .zapp .zb{display:flex;flex-direction:column;align-items:center;gap:4px;color:#e9ebf0;
+    font-size:clamp(7px,1.25vw,10px);font-weight:500;padding:5px clamp(3px,.8vw,8px);border-radius:8px;transition:background .25s;position:relative}
+  .zapp .zb svg{display:block;width:clamp(14px,2.4vw,20px);height:clamp(14px,2.4vw,20px)}
+  .zapp .zw{display:flex;align-items:center;gap:1px}
+  .zapp .zc{width:clamp(8px,1.4vw,12px);height:clamp(8px,1.4vw,12px);margin-top:-14px;opacity:.85}
+  .zapp .zb.share.pulse{background:#3a3c43}
+  .zapp .zb.share.pulse::after{display:none}
+  .zapp .badge{position:absolute;top:1px;right:clamp(0px,.4vw,6px);background:#e5323b;color:#fff;font-size:7px;font-weight:800;
+    width:11px;height:11px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .zapp .pc{display:flex;align-items:flex-start;gap:2px}
+  .zapp .pc em{font-style:normal;font-size:clamp(7px,1.2vw,10px);margin-top:1px}
+  @media(max-width:520px){.zapp .zhide{display:none}}
   .tbtn{display:flex;flex-direction:column;align-items:center;gap:3px;color:#c9d2e4;font-size:9px;font-weight:600;
     padding:4px 8px;border-radius:7px}
   .tbtn i{font-size:15px;font-style:normal;line-height:1}
@@ -452,7 +468,7 @@
         b:"This black bar <b>hides by itself</b> after a few seconds. It's not gone. Move the mouse and it slides back up.",
         st:{toolbar:"hidden"}, hl:"#toolbar", hlDelay:2300, cur:null, then:{toolbar:"show"} },
       { ch:C1, t:"Click the Share button",
-        b:"Middle of the bottom bar: <b>Share</b>, the box with an <b>arrow pointing up</b>. It's a little lighter than the buttons around it. If you can't see it, wiggle the mouse again.",
+        b:"Bottom bar, right after <b>Participants</b>: <b>Share</b>, the box with an <b>arrow pointing up</b>. It turns a lighter grey when your mouse is on it. If you can't see the bar, wiggle the mouse again.",
         st:{}, hl:"#shareBtn", cur:"#shareBtn", click:true },
       { ch:C1, t:"Zoom asks what to show",
         b:"A box opens with little pictures of everything you have open. Click the first one \u2014 <b>Screen</b>. It turns blue when it's picked.",
@@ -553,7 +569,27 @@
   var $=function(s){return document.querySelector(s)};
   var stage=$("#stage"), cursor=$("#cursor"), toolbar=$("#toolbar");
 
+  var I = function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="#e9ebf0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>'; };
+  var CARET = '<svg class="zc" viewBox="0 0 12 12" fill="none" stroke="#e9ebf0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5l3-3 3 3"/></svg>';
+  var SLASH = '<path d="M4 21L20 3" stroke="#e5323b" stroke-width="1.9"/>';
+  var APP_TB =
+    '<div class="zg">'+
+      '<div class="zw"><div class="zb">'+I('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>'+SLASH)+'Audio</div>'+CARET+'</div>'+
+      '<div class="zw"><div class="zb">'+I('<rect x="2.5" y="6.5" width="13" height="11" rx="2"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/>'+SLASH)+'Video</div>'+CARET+'</div>'+
+    '</div>'+
+    '<div class="zg">'+
+      '<div class="zw zhide"><div class="zb"><span class="pc">'+I('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="16.5" cy="6.5" r="2.6"/><path d="M17 12.2c2.5.3 4.2 2.3 4.2 5"/>')+'<em>1</em></span>Participants</div>'+CARET+'</div>'+
+      '<div class="zw"><div class="zb share" id="shareBtn">'+I('<rect x="2.5" y="4" width="19" height="15" rx="2.5"/><path d="M12 15.5V8.5M8.8 11.5L12 8.3l3.2 3.2"/>')+'Share</div>'+CARET+'</div>'+
+      '<div class="zw"><div class="zb">'+I('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/>')+'React</div>'+CARET+'</div>'+
+      '<div class="zb zhide">'+I('<path d="M12 2.8l7.5 3v6c0 4.6-3.2 8.2-7.5 9.4-4.3-1.2-7.5-4.8-7.5-9.4v-6z"/><path d="M12 2.8v18.4M4.5 12h15" />')+'Host tools</div>'+
+      '<div class="zb">'+I('<circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".6" fill="#e9ebf0"/><circle cx="12" cy="12" r=".6" fill="#e9ebf0"/><circle cx="16" cy="12" r=".6" fill="#e9ebf0"/>')+'<span class="badge">1</span>More</div>'+
+    '</div>'+
+    '<div class="zg"><div class="zb"><svg viewBox="0 0 24 24" fill="none" stroke="#e5323b" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.8 8.8l6.4 6.4M15.2 8.8l-6.4 6.4"/></svg>End</div></div>';
+  var WEB_TB = toolbar.innerHTML;
+
   function setChrome(){
+    toolbar.innerHTML = path==="app" ? APP_TB : WEB_TB;
+    toolbar.classList.toggle("zapp", path==="app");
     $("#chromeSlot").outerHTML = path==="web"
       ? '<span class="addr" id="chromeSlot">zoom.us/wc/84172462948</span>'
       : '<span class="apptag" id="chromeSlot">ZOOM · 1:1 WEEKLY COACHING</span>';
